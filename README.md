@@ -1,9 +1,9 @@
 Projeto Mobile - App de Notas com Firebase
 
 //Integrantes//
-Guilherme Braganholo
-Julio Cesar Dias Vilella
-Gabriel Nakamura Ogata 
+Guilherme Braganholo RM560628
+Julio Cesar Dias Vilella RM560494
+Gabriel Nakamura Ogata RM560671
  
 //Descrição do Projeto//
 Aplicação mobile desenvolvida com React Native + Expo, que permite ao usuário:
