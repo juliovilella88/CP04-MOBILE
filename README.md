@@ -1,5 +1,7 @@
 Projeto Mobile - App de Notas com Firebase
 
+Link do Video: https://www.youtube.com/watch?v=naR3Vbn4lrk
+
 //Integrantes//
 Guilherme Braganholo RM560628
 Julio Cesar Dias Vilella RM560494
