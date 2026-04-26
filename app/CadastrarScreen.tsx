@@ -1,101 +1,176 @@
-import React, { useState } from 'react';
-
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
-
-import { createUserWithEmailAndPassword } from 'firebase/auth';
-
-import { auth } from "../services/firebaseConfig";
-
-import { useRouter } from 'expo-router';
-
+import React, { useEffect, useState } from 'react';
+import {
+  Alert,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useRouter } from 'expo-router';
+import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { useTranslation } from 'react-i18next';
 
+import LanguageSelector from '../components/LanguageSelector';
+import { loadSavedLanguage } from '../i18n';
+import { auth } from '../services/firebaseConfig';
 import { criarPerfilUsuario } from '../services/userDataService';
- 
+
 export default function CadastroScreen() {
-
   const [nome, setNome] = useState('');
-
   const [email, setEmail] = useState('');
-
   const [senha, setSenha] = useState('');
- 
+
   const router = useRouter();
- 
-  const handleCadastro = () => {
+  const { t } = useTranslation();
 
-    if (!nome || !email || !senha) {
+  useEffect(() => {
+    void loadSavedLanguage();
+  }, []);
 
-      Alert.alert('Atenção', 'Preencha todos os campos!');
-
+  const handleCadastro = async () => {
+    if (!nome.trim() || !email.trim() || !senha.trim()) {
+      Alert.alert(t('common.attention'), t('register.fillFields'));
       return;
-
     }
- 
-    createUserWithEmailAndPassword(auth, email, senha)
 
-      .then(async (userCredential) => {
+    if (senha.length < 6) {
+      Alert.alert(t('common.attention'), 'A senha precisa ter pelo menos 6 caracteres.');
+      return;
+    }
 
-        const user = userCredential.user;
- 
+    try {
+      const userCredential = await createUserWithEmailAndPassword(
+        auth,
+        email.trim(),
+        senha
+      );
+
+      const user = userCredential.user;
+
+      try {
         await criarPerfilUsuario({
-
           uid: user.uid,
-
           email: user.email,
-
-          nome
-
+          nome: nome.trim(),
         });
- 
-        await AsyncStorage.setItem("@user", JSON.stringify(user));
+      } catch (firestoreError) {
+        console.log('Erro ao salvar perfil no Firestore:', firestoreError);
+      }
 
-        router.replace("/Home");
+      await AsyncStorage.setItem(
+        '@user',
+        JSON.stringify({
+          uid: user.uid,
+          email: user.email,
+          nome: nome.trim(),
+        })
+      );
 
-      })
+      Alert.alert('Sucesso', 'Conta criada com sucesso!');
+      router.replace('/Home');
+    } catch (error: any) {
+      console.log('Erro completo no cadastro:', error);
 
-      .catch(() => {
+      let mensagem = t('register.failed');
 
-        Alert.alert("Erro", "Falha ao cadastrar");
+      if (error?.code === 'auth/email-already-in-use') {
+        mensagem = 'Este e-mail já está cadastrado.';
+      } else if (error?.code === 'auth/invalid-email') {
+        mensagem = 'E-mail inválido.';
+      } else if (error?.code === 'auth/weak-password') {
+        mensagem = 'A senha precisa ter pelo menos 6 caracteres.';
+      } else if (error?.code === 'auth/network-request-failed') {
+        mensagem = 'Erro de conexão. Verifique sua internet.';
+      }
 
-      });
-
+      Alert.alert(t('common.error'), mensagem);
+    }
   };
- 
+
   return (
-<View style={styles.container}>
-<Text style={styles.titulo}>Criar Conta</Text>
- 
+    <View style={styles.container}>
+      <Text style={styles.titulo}>{t('register.title')}</Text>
+
+      <LanguageSelector
+        label={t('language.label')}
+        ptLabel={t('language.portuguese')}
+        enLabel={t('language.english')}
+      />
+
       <TouchableOpacity onPress={() => router.back()}>
-<Text style={styles.voltar}>← Voltar</Text>
-</TouchableOpacity>
- 
-      <TextInput style={styles.input} placeholder="Nome" value={nome} onChangeText={setNome} />
-<TextInput style={styles.input} placeholder="E-mail" value={email} onChangeText={setEmail} />
-<TextInput style={styles.input} placeholder="Senha" secureTextEntry value={senha} onChangeText={setSenha} />
- 
-      <TouchableOpacity style={styles.botao} onPress={handleCadastro}>
-<Text style={styles.textoBotao}>Cadastrar</Text>
-</TouchableOpacity>
-</View>
+        <Text style={styles.voltar}>{t('common.back')}</Text>
+      </TouchableOpacity>
 
+      <TextInput
+        style={styles.input}
+        placeholder={t('register.name')}
+        placeholderTextColor="#aaa"
+        value={nome}
+        onChangeText={setNome}
+      />
+
+      <TextInput
+        style={styles.input}
+        placeholder={t('login.email')}
+        placeholderTextColor="#aaa"
+        value={email}
+        onChangeText={setEmail}
+        autoCapitalize="none"
+        keyboardType="email-address"
+      />
+
+      <TextInput
+        style={styles.input}
+        placeholder={t('login.password')}
+        placeholderTextColor="#aaa"
+        secureTextEntry
+        value={senha}
+        onChangeText={setSenha}
+      />
+
+      <TouchableOpacity style={styles.botao} onPress={() => void handleCadastro()}>
+        <Text style={styles.textoBotao}>{t('register.button')}</Text>
+      </TouchableOpacity>
+    </View>
   );
-
 }
- 
+
 const styles = StyleSheet.create({
-
-  container: { flex: 1, backgroundColor: '#121212', justifyContent: 'center', padding: 20 },
-
-  titulo: { fontSize: 28, color: '#fff', textAlign: 'center', marginBottom: 20 },
-
-  input: { backgroundColor: '#1E1E1E', color: '#fff', borderRadius: 10, padding: 15, marginBottom: 15 },
-
-  botao: { backgroundColor: '#00B37E', padding: 15, borderRadius: 10, alignItems: 'center' },
-
-  textoBotao: { color: '#fff', fontSize: 18 },
-
-  voltar: { color: 'white', marginBottom: 10 }
-
+  container: {
+    flex: 1,
+    backgroundColor: '#121212',
+    justifyContent: 'center',
+    padding: 20,
+  },
+  titulo: {
+    fontSize: 28,
+    color: '#fff',
+    textAlign: 'center',
+    marginBottom: 20,
+    fontWeight: '700',
+  },
+  input: {
+    backgroundColor: '#1E1E1E',
+    color: '#fff',
+    borderRadius: 10,
+    padding: 15,
+    marginBottom: 15,
+  },
+  botao: {
+    backgroundColor: '#00B37E',
+    padding: 15,
+    borderRadius: 10,
+    alignItems: 'center',
+  },
+  textoBotao: {
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: '700',
+  },
+  voltar: {
+    color: 'white',
+    marginBottom: 10,
+  },
 });
- 

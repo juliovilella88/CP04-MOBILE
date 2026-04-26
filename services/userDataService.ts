@@ -7,8 +7,9 @@ import {
   serverTimestamp,
   setDoc,
   updateDoc,
-} from "firebase/firestore";
-import { db } from "./firebaseConfig";
+} from 'firebase/firestore';
+import { db } from './firebaseConfig';
+import { NoteLocation } from './locationService';
 
 type UsuarioBase = {
   uid: string;
@@ -29,12 +30,12 @@ export async function criarPerfilUsuario(params: UsuarioBase & { nome?: string }
     data.nome = nome;
   }
 
-  await setDoc(doc(db, "usuarios", uid), data, { merge: true });
+  await setDoc(doc(db, 'usuarios', uid), data, { merge: true });
 }
 
 export async function registrarUltimoLogin(uid: string, email: string | null) {
   await setDoc(
-    doc(db, "usuarios", uid),
+    doc(db, 'usuarios', uid),
     {
       uid,
       email,
@@ -45,18 +46,24 @@ export async function registrarUltimoLogin(uid: string, email: string | null) {
   );
 }
 
-
-
-export async function salvarNotaUsuario(uid: string, titulo: string, descricao: string) {
-  await addDoc(collection(db, "usuarios", uid, "notas"), {
+export async function salvarNotaUsuario(
+  uid: string,
+  titulo: string,
+  descricao: string,
+  noteLocation: NoteLocation
+) {
+  await addDoc(collection(db, 'usuarios', uid, 'notas'), {
     titulo,
     descricao,
+    latitude: noteLocation.latitude,
+    longitude: noteLocation.longitude,
+    endereco: noteLocation.address,
     criadoEm: serverTimestamp(),
   });
 }
 
 export async function listarNotasUsuario(uid: string) {
-  const snapshot = await getDocs(collection(db, "usuarios", uid, "notas"));
+  const snapshot = await getDocs(collection(db, 'usuarios', uid, 'notas'));
 
   return snapshot.docs.map((item) => ({
     id: item.id,
@@ -70,7 +77,7 @@ export async function editarNotaUsuario(
   titulo: string,
   descricao: string
 ) {
-  await updateDoc(doc(db, "usuarios", uid, "notas", notaId), {
+  await updateDoc(doc(db, 'usuarios', uid, 'notas', notaId), {
     titulo,
     descricao,
     atualizadoEm: serverTimestamp(),
@@ -78,5 +85,5 @@ export async function editarNotaUsuario(
 }
 
 export async function deletarNotaUsuario(uid: string, notaId: string) {
-  await deleteDoc(doc(db, "usuarios", uid, "notas", notaId));
+  await deleteDoc(doc(db, 'usuarios', uid, 'notas', notaId));
 }

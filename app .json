@@ -1,0 +1,35 @@
+{
+  "expo": {
+    "name": "CP05-Mobile",
+    "slug": "cp05-mobile",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "assetBundlePatterns": ["**/*"],
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "package": "com.meercyfps.cp05mobile",
+      "permissions": [
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION",
+        "POST_NOTIFICATIONS"
+      ]
+    },
+    "plugins": [
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Permitir que o app acesse sua localização para salvar o local da nota."
+        }
+      ],
+      "expo-notifications"
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "8aba0bd5-c319-43ec-b5c5-4b92279da0e9"
+      }
+    }
+  }
+}
